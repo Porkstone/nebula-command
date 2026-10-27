@@ -5,7 +5,7 @@
 ## Registered machines
 
 - [Trigbotic](machines/trigbotic.md): selected commander; Windows 11 Pro confirmed locally.
-- [win-srv-01](machines/win-srv-01.md): worker; Windows Server reported by the operator.
+- [win-srv-01](machines/win-srv-01.md): worker; Windows Server 2025 Standard Evaluation observed through the KVM; Windows console sign-in verified.
 - [ubuntu-srv1](machines/ubuntu-srv1.md): worker; Ubuntu reported by the operator.
 
 The operator-supplied Tailscale IPs are stored in `fleet.json`. All three machines are staged with assignment disabled and capacity 0 until connection accounts, workspaces, harnesses, and execution checks are verified. OpenSSH/port 22 are proposed defaults, not observed remote service settings.

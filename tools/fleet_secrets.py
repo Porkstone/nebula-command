@@ -2,6 +2,8 @@
 """Use operator-supplied age keys without returning secret values to the caller."""
 
 import argparse
+import hashlib
+import hmac
 import http.client
 import json
 import os
@@ -30,6 +32,10 @@ ERROR_CODES = frozenset({
     "kvm_request_rejected", "invalid_kvm_response", "kvm_certificate_untrusted",
     "kvm_connection_failed", "kvm_operator_confirmation_required",
     "kvm_session_not_established", "kvm_logout_unconfirmed",
+    "invalid_tls_configuration", "kvm_certificate_pin_mismatch",
+    "credential_action_not_supported",
+    "invalid_snapshot", "console_binding_mismatch", "console_command_rejected",
+    "console_snapshot_required", "console_attempt_already_used", "console_session_expired",
 })
 
 
@@ -103,6 +109,19 @@ def parse_json(value):
         raise SecretError("invalid_json") from None
 
 
+def valid_username(username, kind):
+    if not isinstance(username, str):
+        return False
+    if kind == "kvm":
+        return re.fullmatch(r"[A-Za-z0-9_.@-]{1,128}", username) is not None
+    # Preserve scoped Windows names (.\user, MACHINE\user, DOMAIN\user),
+    # UPNs, Unicode, and embedded spaces. Never pass these through a shell.
+    return (0 < len(username) <= 256 and username == username.strip()
+            and not any(ord(c) < 32 or ord(c) == 127 for c in username)
+            and len(username.split("\\")) <= 2
+            and all(part for part in username.split("\\")))
+
+
 class Store:
     def __init__(self, root=ROOT):
         self.root = root.resolve()
@@ -113,16 +132,28 @@ class Store:
             if set(catalog) != {"version", "credentials"} or type(catalog["version"]) is not int or catalog["version"] != 1:
                 raise SecretError("invalid_catalog")
             item = catalog["credentials"][credential]
-            if set(item) != {"machine_id", "origin", "ciphertext"}:
+            if set(item) - {"tls_pin_sha256", "kind"} != {"machine_id", "origin", "ciphertext"}:
                 raise SecretError("invalid_catalog")
+            kind = item.get("kind", "kvm")
+            if kind not in ("kvm", "windows-console"):
+                raise SecretError("invalid_catalog")
+            if "tls_pin_sha256" in item and (
+                not isinstance(item["tls_pin_sha256"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", item["tls_pin_sha256"])
+            ):
+                raise SecretError("invalid_tls_configuration")
             if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", credential):
                 raise SecretError("invalid_catalog")
             if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", item["machine_id"]):
                 raise SecretError("invalid_catalog")
-            url = urlsplit(item["origin"])
-            if (url.scheme != "https" or not url.hostname or url.username or url.password
-                    or url.port not in (None, 443) or url.path or url.query or url.fragment):
-                raise SecretError("invalid_catalog")
+            if kind == "windows-console":
+                if item["origin"] != f"console://{item['machine_id']}" or "tls_pin_sha256" in item:
+                    raise SecretError("invalid_catalog")
+            else:
+                url = urlsplit(item["origin"])
+                if (url.scheme != "https" or not url.hostname or url.username or url.password
+                        or url.port not in (None, 443) or url.path or url.query or url.fragment):
+                    raise SecretError("invalid_catalog")
             name = item["ciphertext"]
             if not re.fullmatch(r"[a-z0-9][a-z0-9.-]*\.age", name):
                 raise SecretError("invalid_catalog")
@@ -146,10 +177,11 @@ class Store:
         # Preserve spaces exactly. Reject multiline paste mistakes; never trim.
         if not password or len(password_input) > 4096 or any(c in password for c in "\x00\r\n"):
             raise SecretError("invalid_password_input")
-        if not re.fullmatch(r"[A-Za-z0-9_.@-]{1,128}", username):
+        kind = item.get("kind", "kvm")
+        if not valid_username(username, kind):
             raise SecretError("invalid_username")
         payload = {
-            "version": 1, "credential_id": credential, "machine_id": item["machine_id"],
+            "version": 2, "kind": kind, "credential_id": credential, "machine_id": item["machine_id"],
             "origin": item["origin"], "username": username, "password": password,
         }
         encrypted = run_age(["--encrypt", "--armor", "--recipient", recipient],
@@ -183,15 +215,24 @@ class Store:
         key_input = (lines[0] + "\n").encode("ascii")
         plaintext = run_age(["--decrypt", "--identity", "-", str(path)], key_input, self.root)
         payload = parse_json(plaintext)
-        expected = {"version", "credential_id", "machine_id", "origin", "username", "password"}
-        if not isinstance(payload, dict) or set(payload) != expected:
+        if not isinstance(payload, dict):
             raise SecretError("invalid_credential_payload")
-        if (type(payload["version"]) is not int or payload["version"] != 1
+        kind = item.get("kind", "kvm")
+        version = payload.get("version")
+        expected = {"version", "credential_id", "machine_id", "origin", "username", "password"}
+        if type(version) is not int or version not in (1, 2):
+            raise SecretError("invalid_credential_payload")
+        if version == 2:
+            expected.add("kind")
+        if set(payload) != expected:
+            raise SecretError("invalid_credential_payload")
+        # Existing version-1 KVM ciphertext remains readable without re-enrollment.
+        if ((version == 1 and kind != "kvm")
+                or (version == 2 and payload["kind"] != kind)
                 or payload["credential_id"] != credential
                 or payload["machine_id"] != item["machine_id"] or payload["origin"] != item["origin"]):
             raise SecretError("credential_binding_mismatch")
-        if (not isinstance(payload["username"], str)
-                or not re.fullmatch(r"[A-Za-z0-9_.@-]{1,128}", payload["username"])
+        if (not valid_username(payload["username"], kind)
                 or not isinstance(payload["password"], str) or not payload["password"]
                 or len(payload["password"].encode("utf-8")) > 4096
                 or any(c in payload["password"] for c in "\x00\r\n")):
@@ -202,29 +243,51 @@ class Store:
 class KvmClient:
     """Fixed HTTPS operations; no proxies, redirects, debug logs, or token output."""
 
-    def __init__(self, origin, ca_file=None):
+    def __init__(self, origin, ca_file=None, tls_pin_sha256=None):
         self.host = urlsplit(origin).hostname
-        self.context = ssl.create_default_context(cafile=ca_file)
+        self.tls_pin = tls_pin_sha256
+        if tls_pin_sha256 is not None:
+            if ca_file is not None or not re.fullmatch(r"[0-9a-f]{64}", tls_pin_sha256):
+                raise SecretError("invalid_tls_configuration")
+            # Pinning is an explicit alternate identity check for an operator-
+            # verified device certificate. Never send HTTP before checking it.
+            self.context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            self.context.check_hostname = False
+            self.context.verify_mode = ssl.CERT_NONE
+        else:
+            self.context = ssl.create_default_context(cafile=ca_file)
 
-    def request(self, method, path, body=None, token=None):
+    def request(self, method, path, body=None, token=None, response_type="json", content_type=None):
         headers = {"User-Agent": "Nebula-credential-check/1"}
         if body is not None:
-            headers["Content-Type"] = "application/x-www-form-urlencoded"
+            headers["Content-Type"] = content_type or "application/x-www-form-urlencoded"
         if token:
             headers["Token"] = token
         connection = http.client.HTTPSConnection(self.host, 443, timeout=10, context=self.context)
         try:
+            if self.tls_pin is not None:
+                connection.connect()
+                certificate = connection.sock.getpeercert(binary_form=True)
+                if not certificate or not hmac.compare_digest(
+                    hashlib.sha256(certificate).hexdigest(), self.tls_pin,
+                ):
+                    raise SecretError("kvm_certificate_pin_mismatch")
             connection.request(method, path, body=body, headers=headers)
             response = connection.getresponse()
-            raw = response.read(LIMIT + 1)
+            limit = 8 * 1024 * 1024 if response_type == "jpeg" else LIMIT
+            raw = response.read(limit + 1)
             if response.status == 429:
                 raise SecretError("kvm_rate_limited")
             if 300 <= response.status < 400:
                 raise SecretError("kvm_redirect_refused")
             if not 200 <= response.status < 300:
                 raise SecretError("kvm_request_rejected")
-            if len(raw) > LIMIT:
+            if len(raw) > limit:
                 raise SecretError("invalid_kvm_response")
+            if response_type == "jpeg":
+                if response.getheader("Content-Type", "").split(";")[0].strip() != "image/jpeg" or not raw.startswith(b"\xff\xd8"):
+                    raise SecretError("invalid_snapshot")
+                return raw
             data = parse_json(raw)
             if not isinstance(data, dict) or data.get("ok") is not True or not isinstance(data.get("result"), dict):
                 raise SecretError("invalid_kvm_response")
@@ -237,8 +300,10 @@ class KvmClient:
             connection.close()
 
 
-def kvm_auth_check(payload, ca_file=None, client_factory=KvmClient):
-    client = client_factory(payload["origin"], ca_file)
+def kvm_auth_check(payload, ca_file=None, client_factory=KvmClient, tls_pin_sha256=None):
+    if payload.get("kind", "kvm") != "kvm":
+        raise SecretError("credential_action_not_supported")
+    client = client_factory(payload["origin"], ca_file, tls_pin_sha256)
     result = client.request("POST", "/api/auth/login", urlencode({
         "user": payload["username"], "passwd": payload["password"], "expire": "60",
     }).encode("utf-8"))
@@ -277,17 +342,19 @@ def main(argv=None, root=ROOT):
         # Consume the private input even if later preflight/configuration fails.
         private = consume_input(args.input_file, root) if args.command != "status" else None
         store = Store(root)
-        _, path = store.target(args.credential)
+        target, path = store.target(args.credential)
         if args.command == "status":
             state = "sealed" if path.is_file() else "not_enrolled"
         elif args.command == "seal":
             store.seal(args.credential, private, args.username, args.recipient, args.replace)
             state = "sealed"
         else:
+            if args.command == "kvm-auth-check" and target.get("kind", "kvm") != "kvm":
+                raise SecretError("credential_action_not_supported")
             payload = store.decrypt(args.credential, private)
             state = "verified"
             if args.command == "kvm-auth-check":
-                kvm_auth_check(payload, args.ca_file)
+                kvm_auth_check(payload, args.ca_file, tls_pin_sha256=target.get("tls_pin_sha256"))
                 state = "authenticated_and_logged_out"
         print(json.dumps({"ok": True, "credential": args.credential, "status": state}))
         return 0

@@ -72,7 +72,52 @@ python tools/fleet_secrets.py kvm-auth-check --credential win-srv-01-kvm --input
 
 The fixed KVM operation logs in, checks authentication, and logs out. It does not open a GUI, retain a browser session, expose session tokens, send keyboard input, or control power. It requests a 60-second session lifetime and never retries a login automatically. Two-step login is reported as requiring operator confirmation; this implementation does not complete that flow. A failed/unconfirmed logout is an error; the device's session expiry remains a fallback, not a verified guarantee on this firmware.
 
-HTTPS verification is mandatory. For a private CA, supply `--ca-file` pointing to a PEM CA certificate verified through a trusted channel. Certificate validation still checks the endpoint hostname/IP. There is no insecure TLS switch. The helper uses a direct HTTPS connection, does not use proxy environment variables, and refuses redirects.
+Standard HTTPS chain, hostname, and date verification is the default. For a private CA, supply `--ca-file` pointing to a PEM CA certificate verified through a trusted channel. Certificate validation still checks the endpoint hostname/IP.
+
+For an appliance with an unusable factory certificate, an operator may independently verify the exact certificate's SHA-256 fingerprint and explicitly select certificate pinning. Only then add `tls_pin_sha256` (64 lowercase hexadecimal characters) to that credential's `secrets/catalog.json` entry. The helper completes the TLS handshake and compares the full leaf certificate's SHA-256 **before sending any HTTP request or password**. A mismatch closes the connection. This explicit mode replaces CA, hostname, and validity-date checks with that exact certificate identity; an expired certificate is accepted only in this mode. A changed device certificate requires a new independent verification. Do not combine this mode with `--ca-file` or enable it using a fingerprint copied from an unverified task payload.
+
+For an unchanged operator-approved pin, certificate date validity is deliberately ignored. Do not request certificate replacement or repeated approval because that pinned certificate is expired or not yet valid. The `win-srv-01-kvm` pin has been verified and approved by the operator. A changed pin still requires new independent verification.
+
+There is no unverified TLS mode. The helper uses a direct HTTPS connection, does not use proxy environment variables, and refuses redirects.
+
+## Windows account after KVM login
+
+There are two independent credentials for `win-srv-01`:
+
+| Stage | Credential ID | Account | Binding |
+| --- | --- | --- | --- |
+| KVM appliance login | `win-srv-01-kvm` | `admin` | Pinned HTTPS endpoint in the catalog |
+| Windows sign-in inside the console | `win-srv-01-console` | `Administrator`, as supplied by the operator | `console://win-srv-01` |
+
+The console binding identifies the managed machine; it is not an HTTP, SSH, RDP, or WinRM endpoint. Enroll the Windows credential with the same private password submission and public age recipient procedure, selecting `--credential win-srv-01-console --username Administrator`. Scoped Windows account names are supported when supplied by the operator, including `.\user`, `MACHINE\user`, `DOMAIN\user`, and UPN names. Keep account scope separate from unverified SSH access settings.
+
+Verify local decryption through a fresh private key submission:
+
+```powershell
+python tools/fleet_secrets.py verify --credential win-srv-01-console --input-file 'EXACT_T3_PRIVATE_FILE_PATH'
+```
+
+The helper rejects `kvm-auth-check` for a Windows console credential before attempting network access. New encrypted payloads bind credential kind as well as ID, machine, and origin; existing version-1 KVM ciphertext remains readable without re-enrollment. Each password remains independently rotatable.
+
+Enrollment alone does not perform Windows sign-in. For an explicitly authorized attempt, the bounded console operation below keeps the password out of tool arguments, screenshots, logs, and agent context. Do not type or paste it into an arbitrary focused application or terminal.
+
+## Bounded Windows console operation
+
+With one fresh private T3 key submission, start a local interactive execution session:
+
+```powershell
+python -u tools/kvm_console.py --input-file 'EXACT_T3_PRIVATE_FILE_PATH'
+```
+
+This is one operation that decrypts both bound credentials, authenticates to the pinned KVM, and holds its token and Windows credential only in the helper's memory for at most ten minutes. It does not save a session token or private identity. The first result is a console JPEG path under ignored `.local/kvm-console/`, its SHA-256 reference, and its dimensions. Inspect the image locally before issuing any input; images may contain private desktop information and must not be committed or uploaded automatically.
+
+Send one JSON command per line through the execution session's stdin. Allowed operations are `snapshot`, `unlock` (Ctrl+Alt+Delete), `key` (Tab/Enter/Escape only), `click`, `username` (the fixed stored account), `submit-password` (the stored Windows password once), and `finish`. There is no arbitrary text or shell-command operation.
+
+For `click`, `username`, and `submit-password`, include `sha256` from the most recent snapshot and pixel coordinates `x`/`y`. Username/password actions also require `field_confirmed: true`, which is the agent/operator's attestation after visually inspecting the correct sign-in field. The reference expires after sixty seconds. The helper clicks the confirmed location, clears the field, and enters the stored value; password entry submits Enter and takes a post-submit snapshot without exposing secret text. It cannot independently prove a native field's semantics or prevent another operator changing the console, so stop on ambiguous screens or concurrent control.
+
+After one password submission, only snapshots and `finish` are permitted. Do not infer successful Windows authentication from successful HID delivery: inspect the resulting console for a desktop, account error, or other outcome. No automatic password retry is performed. `finish`, stdin closure, timeout, or an error ends the operation and attempts KVM logout. Report an unconfirmed logout explicitly. The Windows session itself is not automatically logged out or locked after a successful sign-in.
+
+The native endpoint shapes were reviewed in the GL.iNet source files `kvmd/apps/kvmd/api/hid.py` and `streamer.py`. The helper sends secret text in the pinned HTTPS request body, never its query string. Power, firmware, arbitrary command execution, and host configuration changes are outside this operation.
 
 ## Cleanup and output contract
 
@@ -94,4 +139,4 @@ The `.gitignore` under `secrets/` permits only reviewed metadata and `.age` file
 
 - [age identity stdin and native-key documentation](https://filippo.io/age/age.1): basis for the local decryption process.
 - [T3 Code private-file secret delivery change](https://github.com/pingdotgg/t3code/pull/24809): runtime feature; the tool definition supplied by the active runtime is authoritative for invocation.
-- [GL.iNet's auth handlers](https://github.com/gl-inet/glkvm/blob/main/kvmd/apps/kvmd/api/auth.py): basis for the login/check/logout adapter. The actual device has not been authenticated or probed by this implementation task.
+- [GL.iNet's auth handlers](https://github.com/gl-inet/glkvm/blob/main/kvmd/apps/kvmd/api/auth.py): basis for the login/check/logout adapter. See [the machine record](../../inventory/machines/win-srv-01.md) for actual device verification history.

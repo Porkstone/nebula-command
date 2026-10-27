@@ -34,7 +34,9 @@ Requires Windows PowerShell 5.1+ and CIM access. Reads hostname, OS/version/arch
 python tools/fleet_secrets.py status --credential win-srv-01-kvm
 ```
 
-The live KVM credential has not been enrolled. The bounded KVM authentication adapter does login/check/logout; it does not provide browser or power control. This workflow does not isolate secrets from unrestricted processes under the same OS account.
+The KVM credential is enrolled with an operator-approved exact certificate pin. The bounded KVM authentication adapter does login/check/logout. Each use requires a fresh private age key submission through T3. This workflow does not isolate secrets from unrestricted processes under the same OS account.
+
+The Windows server account is separately enrolled as `win-srv-01-console` with kind `windows-console`. It supports `seal` and `verify`; KVM appliance login operations refuse this credential. `kvm_console.py` provides a separately authorized, ten-minute console operation with screenshots, limited sign-in navigation, and at most one visually gated password submission. It stores no persistent token and logs out of the KVM on completion. See the operator workflow before using it; it provides no power or arbitrary shell-command control.
 
 ## Extending tools
 

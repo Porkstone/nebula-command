@@ -212,6 +212,61 @@ class SecretTests(unittest.TestCase):
         self.assertEqual(json.loads(output)["status"], "authenticated_and_logged_out")
         self.assertFalse(self.input_path.exists())
 
+    def test_windows_console_accounts_roundtrip_with_scope_and_unicode(self):
+        self.credential = "win-srv-01-console"
+        for username in ("Administrator", r".\Administrator", r"WIN-SRV-01\Administrator",
+                         r"DOMAIN\agent", "agent@example.com", "Local User", "Élodie"):
+            with self.subTest(username=username):
+                code, output = self.call("seal", self.password.encode(),
+                                         ("--username", username, "--recipient", self.recipient, "--replace"))
+                self.assertEqual(code, 0, output)
+                self.assertFalse(self.input_path.exists())
+                payload = self.store.decrypt(self.credential, self.key)
+                self.assertEqual(payload["kind"], "windows-console")
+                self.assertEqual(payload["username"], username)
+                self.assertEqual(payload["origin"], "console://win-srv-01")
+                self.assertEqual(payload["password"], self.password)
+
+    def test_console_password_cannot_be_sent_to_kvm_login(self):
+        self.credential = "win-srv-01-console"
+        with patch.object(secrets, "kvm_auth_check") as check:
+            code, output = self.call("kvm-auth-check", self.key)
+        self.assertEqual(code, 1)
+        self.assertIn("credential_action_not_supported", output)
+        self.assertFalse(self.input_path.exists())
+        check.assert_not_called()
+
+    def test_existing_version_one_kvm_ciphertext_remains_readable(self):
+        target, path = self.store.target(self.credential)
+        payload = {"version": 1, "credential_id": self.credential,
+                   "machine_id": target["machine_id"], "origin": target["origin"],
+                   "username": "admin", "password": self.password}
+        path.write_bytes(secrets.run_age(["--encrypt", "--armor", "--recipient", self.recipient],
+                                        json.dumps(payload).encode()))
+        self.assertEqual(self.store.decrypt(self.credential, self.key)["password"], self.password)
+
+    def test_encrypted_credential_kind_mismatch_is_rejected(self):
+        path = self.seal()
+        payload = self.store.decrypt(self.credential, self.key)
+        payload["kind"] = "windows-console"
+        path.write_bytes(secrets.run_age(["--encrypt", "--armor", "--recipient", self.recipient],
+                                        json.dumps(payload).encode()))
+        code, output = self.call("verify", self.key)
+        self.assertEqual(code, 1)
+        self.assertIn("credential_binding_mismatch", output)
+
+    def test_console_catalog_cannot_route_password_to_http_endpoint(self):
+        catalog = json.loads(self.catalog_path.read_text())
+        catalog["credentials"]["win-srv-01-console"]["origin"] = "https://100.126.31.7"
+        self.catalog_path.write_text(json.dumps(catalog))
+        with self.assertRaises(secrets.SecretError):
+            self.store.target("win-srv-01-console")
+
+    def test_windows_username_rejects_control_characters_and_malformed_scope(self):
+        for username in ("", "Administrator\n", " User", "User ", "\\User", "DOMAIN\\", "A\\B\\C"):
+            with self.subTest(username=username):
+                self.assertFalse(secrets.valid_username(username, "windows-console"))
+
 
 class KvmTests(unittest.TestCase):
     def setUp(self):
@@ -230,7 +285,7 @@ class KvmTests(unittest.TestCase):
                     return {"two_step_required": True} if two_step else {"token": "a" * 64}
                 return {}
 
-        return lambda origin, ca_file: Client()
+        return lambda origin, ca_file, tls_pin_sha256=None: Client()
 
     def test_login_check_logout_is_bounded_and_has_short_expiry(self):
         secrets.kvm_auth_check(self.payload, client_factory=self.factory())
@@ -239,6 +294,12 @@ class KvmTests(unittest.TestCase):
         self.assertEqual(form["passwd"], [self.payload["password"]])
         self.assertEqual(form["expire"], ["60"])
         self.assertEqual(self.calls[1][3], "a" * 64)
+
+    def test_library_auth_check_rejects_windows_credentials_before_connecting(self):
+        self.payload["kind"] = "windows-console"
+        with self.assertRaisesRegex(secrets.SecretError, "credential_action_not_supported"):
+            secrets.kvm_auth_check(self.payload, client_factory=self.factory())
+        self.assertEqual(self.calls, [])
 
     def test_logout_is_attempted_after_auth_check_failure(self):
         with self.assertRaisesRegex(secrets.SecretError, "test_request_failed"):
@@ -274,6 +335,45 @@ class KvmTests(unittest.TestCase):
         with patch.object(secrets.http.client, "HTTPSConnection", return_value=connection):
             with self.assertRaisesRegex(secrets.SecretError, "kvm_certificate_untrusted"):
                 secrets.KvmClient(self.payload["origin"]).request("POST", "/api/auth/login")
+
+    def test_changed_pinned_certificate_prevents_all_http_credential_transmission(self):
+        from unittest.mock import Mock
+        connection = Mock()
+        connection.sock.getpeercert.return_value = b"different-test-certificate"
+        with patch.object(secrets.http.client, "HTTPSConnection", return_value=connection):
+            client = secrets.KvmClient(self.payload["origin"], tls_pin_sha256="a" * 64)
+            with self.assertRaisesRegex(secrets.SecretError, "kvm_certificate_pin_mismatch"):
+                client.request("POST", "/api/auth/login", body=b"dummy-private-password")
+        connection.connect.assert_called_once()
+        connection.request.assert_not_called()
+        connection.close.assert_called_once()
+
+    def test_matching_pin_is_verified_before_http_request(self):
+        from unittest.mock import Mock
+        certificate = b"exact-test-device-certificate"
+        pin = secrets.hashlib.sha256(certificate).hexdigest()
+        events = []
+        connection = Mock()
+        connection.connect.side_effect = lambda: events.append("connect")
+        connection.sock.getpeercert.side_effect = lambda **kwargs: (events.append("certificate") or certificate)
+        connection.request.side_effect = lambda *args, **kwargs: events.append("request")
+        response = Mock(status=200)
+        response.read.return_value = b'{"ok":true,"result":{}}'
+        connection.getresponse.return_value = response
+        with patch.object(secrets.http.client, "HTTPSConnection", return_value=connection):
+            secrets.KvmClient(self.payload["origin"], tls_pin_sha256=pin).request("GET", "/api/auth/check")
+        self.assertEqual(events, ["connect", "certificate", "request"])
+
+    def test_default_tls_keeps_chain_and_hostname_verification_enabled(self):
+        client = secrets.KvmClient(self.payload["origin"])
+        self.assertTrue(client.context.check_hostname)
+        self.assertEqual(client.context.verify_mode, secrets.ssl.CERT_REQUIRED)
+
+    def test_invalid_or_conflicting_pinning_configuration_is_rejected(self):
+        for pin, ca_file in (("bad-pin", None), ("a" * 64, "some-ca.pem")):
+            with self.subTest(pin=pin, ca_file=ca_file):
+                with self.assertRaisesRegex(secrets.SecretError, "invalid_tls_configuration"):
+                    secrets.KvmClient(self.payload["origin"], ca_file, pin)
 
 
 if __name__ == "__main__":
