@@ -1,0 +1,9 @@
+# Consistent text files across Windows, Linux, and macOS checkouts.
+* text=auto
+*.md text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.hujson text eol=lf
+*.py text eol=lf
+*.ps1 text eol=lf
+*.age -text

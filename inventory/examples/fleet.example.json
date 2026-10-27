@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "commander": "command-01",
+  "machines": [
+    {
+      "id": "command-01",
+      "role": "commander",
+      "enabled": true,
+      "os": "windows",
+      "host": "command-01.example-tailnet.ts.net",
+      "ssh_user": "operator-example",
+      "ssh_port": 22,
+      "transport": "openssh",
+      "workspace_root": "C:\\work\\nebula",
+      "max_parallel_tasks": 1,
+      "capabilities": ["interactive", "typescript", "powershell"],
+      "harnesses": ["operator-selected-harness"]
+    },
+    {
+      "id": "worker-01",
+      "role": "worker",
+      "enabled": false,
+      "os": "linux",
+      "host": "worker-01.example-tailnet.ts.net",
+      "ssh_user": "agent-example",
+      "ssh_port": 22,
+      "transport": "openssh",
+      "workspace_root": "/srv/nebula/workspaces",
+      "max_parallel_tasks": 2,
+      "capabilities": ["linux", "containers", "typescript"],
+      "harnesses": ["operator-selected-harness"]
+    }
+  ]
+}

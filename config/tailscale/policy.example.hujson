@@ -1,0 +1,33 @@
+// EXAMPLE FRAGMENT ONLY — review and merge with the real tailnet policy.
+// Replace operator@example.com; confirm tag ownership and all existing grants/ACLs.
+// Intended for ordinary OpenSSH over Tailscale. No public port forwarding needed.
+{
+  "groups": {
+    "group:nebula-operators": ["operator@example.com"],
+  },
+  "tagOwners": {
+    "tag:nebula-commander": ["group:nebula-operators"],
+    "tag:nebula-worker": ["group:nebula-operators"],
+  },
+  "grants": [
+    {
+      "src": ["tag:nebula-commander"],
+      "dst": ["tag:nebula-worker"],
+      "ip": ["tcp:22"],
+    },
+  ],
+  "tests": [
+    {
+      "src": "tag:nebula-commander",
+      "accept": ["tag:nebula-worker:22"],
+    },
+    {
+      "src": "tag:nebula-worker",
+      "deny": ["tag:nebula-commander:22", "tag:nebula-worker:22"],
+    },
+  ],
+}
+// Assign tags deliberately: tagging a personal workstation changes its policy
+// identity. An operator-device selector may suit an existing tailnet better.
+// For Tailscale SSH, add a separately reviewed `ssh` policy for exact OS users.
+// Network grants alone do not authorize Tailscale SSH logins.

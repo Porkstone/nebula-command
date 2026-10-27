@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "commander": "trigbotic",
+  "machines": [
+    {
+      "id": "trigbotic",
+      "role": "commander",
+      "enabled": false,
+      "os": "windows",
+      "host": "100.123.213.15",
+      "ssh_user": null,
+      "ssh_port": 22,
+      "transport": "openssh",
+      "workspace_root": null,
+      "max_parallel_tasks": 0,
+      "capabilities": [],
+      "harnesses": []
+    },
+    {
+      "id": "win-srv-01",
+      "role": "worker",
+      "enabled": false,
+      "os": "windows",
+      "host": "100.121.209.21",
+      "ssh_user": null,
+      "ssh_port": 22,
+      "transport": "openssh",
+      "workspace_root": null,
+      "max_parallel_tasks": 0,
+      "capabilities": [],
+      "harnesses": []
+    },
+    {
+      "id": "ubuntu-srv1",
+      "role": "worker",
+      "enabled": false,
+      "os": "linux",
+      "host": "100.107.205.121",
+      "ssh_user": null,
+      "ssh_port": 22,
+      "transport": "openssh",
+      "workspace_root": null,
+      "max_parallel_tasks": 0,
+      "capabilities": [],
+      "harnesses": []
+    }
+  ]
+}

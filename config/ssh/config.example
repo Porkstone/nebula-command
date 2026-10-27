@@ -1,0 +1,15 @@
+# EXAMPLE ONLY. Replace names, account, and local key path before use.
+# Merge into the commander's ~/.ssh/config; do not overwrite existing entries.
+Host nebula-worker-01
+    HostName worker-01.example-tailnet.ts.net
+    User agent-example
+    Port 22
+    IdentityFile ~/.ssh/nebula_workers
+    IdentitiesOnly yes
+    ForwardAgent no
+    StrictHostKeyChecking yes
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+
+# Verify and enroll the host key through a trusted channel before connecting.
+# This key-based example is for OpenSSH, not the Tailscale SSH server.

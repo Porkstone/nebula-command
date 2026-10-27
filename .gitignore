@@ -1,0 +1,18 @@
+# Host-local state, credentials, and collected snapshots
+.local/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.agekey
+*.identity
+*.plaintext
+id_ed25519*
+id_rsa*
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+Thumbs.db

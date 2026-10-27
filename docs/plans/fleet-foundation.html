@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nebula Command — repository foundation</title>
+<style>
+:root{color-scheme:light;--ink:#162839;--muted:#526879;--line:#d8e2e9;--accent:#087e83}*{box-sizing:border-box}body{margin:0;background:#f3f6f8;color:var(--ink);font:16px/1.65 system-ui,sans-serif}main{max-width:1000px;margin:48px auto;padding:40px;background:white;border:1px solid var(--line);border-radius:16px}h1{font-size:36px;line-height:1.15;margin:12px 0 20px}h2{font-size:21px;margin-top:32px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:700}.lead{font-size:19px;color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.box{border:1px solid var(--line);border-radius:10px;padding:20px}.box h2{margin:0 0 8px}table{border-collapse:collapse;width:100%}td,th{padding:12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:13px;color:var(--muted)}code{background:#eef4f6;padding:2px 5px;border-radius:4px}a{color:var(--accent)}li{margin:8px 0}.note{border-left:4px solid var(--accent);padding:12px 18px;background:#edf8f7}@media(max-width:650px){main{margin:12px;padding:22px}.grid{grid-template-columns:1fr}h1{font-size:28px}td,th{padding:8px}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">Nebula Command · foundation plan · 27 October 2026</div>
+<h1>One commander.<br>A documented fleet of workers.</h1>
+<p class="lead">Create the repository structure, reusable agent skills, and small local tools needed to grow a Tailscale-connected engineering fleet. The commander is normally the human operator’s workstation.</p>
+<div class="grid"><section class="box"><h2>Source of truth</h2><p>Version machine identity, capabilities, configuration, procedures, and task handoffs. Keep credentials and transient runtime state on each machine.</p></section><section class="box"><h2>Initial operating model</h2><p>One active commander assigns bounded tasks. Workers use separate checkouts and return results. Start with supervised dispatch; select a remote execution adapter later.</p></section></div>
+<h2>Deliverables</h2><table><thead><tr><th>Area</th><th>Repository location</th><th>Review outcome</th></tr></thead><tbody>
+<tr><td>Machine inventory</td><td><code>inventory/</code>, <code>templates/</code></td><td>Empty live inventory, clearly marked examples, machine record template.</td></tr>
+<tr><td>Configuration</td><td><code>config/</code>, <code>docs/setup/</code></td><td>Commander/worker setup, platform notes, reviewed SSH and tailnet examples.</td></tr>
+<tr><td>Orchestration</td><td><code>docs/runbooks/</code>, <code>operations/</code></td><td>Task lifecycle, capacity, ownership, results, recovery, commander handover.</td></tr>
+<tr><td>Agent skills</td><td><code>skills/</code></td><td>Onboard machines, coordinate work, reconcile interrupted tasks.</td></tr>
+<tr><td>Tools</td><td><code>tools/</code>, <code>tests/</code></td><td>Inventory checks and read-only Windows hardware collection; no remote execution.</td></tr>
+<tr><td>Research</td><td><code>docs/references.md</code></td><td>Primary references and explicit limits on identifying Theo Browne’s Fleet.</td></tr>
+</tbody></table>
+<h2>Implementation sequence</h2><ol><li>Inspect the directory and verify relevant public references.</li><li>Create inventory, templates, configuration examples, and operating guides.</li><li>Add concise repository-owned skills and local tools.</li><li>Validate the scaffold, skill frontmatter, example inventory, and failure cases.</li></ol>
+<p class="note"><strong>Scaffold implemented.</strong> Inventory checks passed, all five skills passed their bundled validator, eleven behavioral tests passed, the Windows collector ran successfully, and local Markdown links resolved. The operator-provided Dependabot skill is preserved unchanged with its three supporting references and registered for both machine roles. Real fleet activation remains pending machine details and setup verification.</p>
+<p>This phase does not enroll devices, alter Tailscale policy, install services, or implement an unattended dispatcher. No real machine is assigned a role without its details being provided or verified.</p>
+<h2>Questions for fleet activation</h2><p>These do not block the repository scaffold.</p><ol><li>Which PC will be the initial commander, and what are the workers’ names, operating systems, and hardware?</li><li>Which agent harnesses and remote orchestration interface should be supported first?</li><li>Which tailnet identities, SSH accounts, repositories, capacity limits, and task permissions apply?</li></ol>
+</main></body></html>
