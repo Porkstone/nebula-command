@@ -15,9 +15,13 @@ CPU, RAM, GPU, storage headroom, and power/sleep behavior have not been inventor
 ## Configuration
 
 - The supplied Tailscale endpoint was reachable from Trigbotic on 2026-10-27. Tailscale reported this peer online with hostname `Win-Srv-01`; a direct Tailscale ping returned in 1 ms. Enrollment identity and policy tags remain unverified.
-- TCP port 22 actively refused connections during that check; SSH access is unavailable at the configured port. Whether this is due to service configuration or a rejecting firewall rule remains unverified.
+- TCP port 22 initially refused connections. OpenSSH bootstrap on 2026-10-27 subsequently succeeded: `sshd` is running with automatic startup, and key-based login from Trigbotic as `Administrator` is verified. The default remote shell is Windows `cmd.exe`; invoke PowerShell explicitly for PowerShell commands.
+- ED25519 host identity: `SHA256:gdYXf645Y4pWj8XajTeXRRouJAY87nGLcpC9w7tnhoQ`. Compared the live network key with the fingerprint displayed through the operator-verified pinned KVM, then enrolled the matching key in the commander's current user's known hosts.
+- The enabled `OpenSSH-Server-In-TCP` rule permits TCP 22 at local address `100.121.209.21` from `100.123.213.15` only; verified through authenticated SSH. Other existing firewall rules have not been audited.
+- Dedicated commander public key: [trigbotic-win-srv-01.pub](../../config/ssh/trigbotic-win-srv-01.pub), fingerprint `SHA256:W3tFY+Wv57k9A8W03zVqSMRn2ud//MpJBzvqionXeoE`. Private identity stays at `C:\Users\Charl\.ssh\nebula_win_srv_01`, outside this repository, with current-user/SYSTEM/Administrators-only ACL. The server key entry restricts source to the commander and disables agent, port, and X11 forwarding. Existing entries were preserved. The administrator authorized-keys ACL was verified as protected with SYSTEM and Administrators only.
+- Local shortcut on Trigbotic: `ssh nebula-win-srv-01`; source configuration is [trigbotic.config](../../config/ssh/trigbotic.config). Password authentication was not changed. This is a bootstrap administrator connection, not a dedicated unprivileged worker account.
 - TCP connections succeeded on ports 3389 (normally RDP) and 5985 (normally WinRM HTTP). Port 5986 (normally WinRM HTTPS) actively refused connections. Protocol behavior and authenticated sessions have not been tested.
-- SSH account, host identity, workspace root, harnesses, authentication, and session lifecycle remain unverified. KVM authentication, graphical console inspection, sign-in keyboard/mouse input, and Windows sign-in are verified below.
+- Workspace root, harness discovery, and durable session lifecycle remain unverified. KVM authentication, graphical console inspection, sign-in keyboard/mouse input, Windows sign-in, and SSH key authentication are verified.
 - Assignment is disabled and capacity is 0 pending setup verification. Capability labels remain empty until verified.
 
 ## Recovery access: network KVM
@@ -41,11 +45,12 @@ CPU, RAM, GPU, storage headroom, and power/sleep behavior have not been inventor
 - Encrypted credential: `win-srv-01-console`, stored separately in `secrets/win-srv-01-console.json.age` and encrypted to the existing operator public recipient.
 - Intended use: Windows sign-in after KVM appliance authentication. Kind `windows-console` and logical binding `console://win-srv-01` prevent the credential from being submitted to the appliance login operation.
 - The password was supplied through a private T3 card and its disposable plaintext input was consumed. Local decryption and credential-binding verification succeeded using a separately supplied private age identity. A subsequent bounded KVM console operation successfully signed in as `Administrator` with one password submission and visual desktop confirmation. Temporary private inputs were consumed. Account privileges and remote-login permissions have not been tested.
-- This account has not been selected as an SSH execution account or enabled for worker assignment.
+- This account is now verified for SSH bootstrap access using a separate dedicated commander key. The encrypted console password was not copied or used for SSH authentication. Worker assignment remains disabled.
 
 ## Deployed skills and instructions
 
-No deployments have been verified or recorded. Use [the skill deployment guide](../../skills/README.md).
+- Dependabot installed globally for `Administrator` at `C:\Users\Administrator\.agents\skills\dependabot` on 2026-10-27. The fixed installer checked the machine/account, verified all four SHA-256 hashes, and displayed `DEPENDABOT VERIFIED` with the entrypoint hash `85179928b0838c542078747ed9f749209fa656590df593abeb9853ee43426edf`. Files match the pinned source manifest in `tools/dependabot_deploy.py`. Available across projects for harnesses using this global directory; actual harness discovery and other OS users remain unverified.
+- Other deployments remain unverified. Use [the skill deployment guide](../../skills/README.md).
 
 ## Verification history
 
@@ -62,7 +67,9 @@ No deployments have been verified or recorded. Use [the skill deployment guide](
 | 2026-10-27 | Operator username and T3 private password submission | Windows account `Administrator` enrolled as a separate age-encrypted console credential; disposable input consumed | Local decryption verification pending; no Windows authentication attempt |
 | 2026-10-27 | T3 private identity submission and local helper check | `verified`: Windows credential decrypted successfully and matched its kind, machine, and console binding; no password output | No Windows authentication attempt or session created |
 | 2026-10-27 | Bounded KVM console operation with fresh T3 private identity | Ctrl+Alt+Delete, verified Administrator password field, one encrypted-password submission, and visual Windows desktop confirmation succeeded; KVM logout confirmed | Windows left signed in; no commands, host settings, firmware, or power controls used |
+| 2026-10-27 | Operator-authorized global skill installation through pinned KVM | Fixed PowerShell installer verified all four Dependabot files at Administrator's user-wide skill path. Transfer used only five non-secret files over Tailscale, restricted to this worker. Success and entrypoint hash visually confirmed; KVM logged out and transfer listener stopped | Initial long HID request timed out; unsubmitted input cleared before the short installer command. Harness discovery and other users remain unverified; assignment stays disabled |
+| 2026-10-27 | Operator-authorized SSH bootstrap through pinned KVM, followed by authenticated SSH checks | Configured automatic sshd startup, scoped the standard firewall rule, installed the dedicated source-restricted public key, and verified host identity through the KVM. Strict-host-checking batch key login returned `win-srv-01\administrator` and `Win-Srv-01`; remote queries verified service, firewall scope, authorized-key ACL, and existing Dependabot hash | Uses Administrator; no dedicated execution account, durable agent session, or dispatch activation. Password authentication remains unchanged |
 
 ## Configuration changes
 
-Registered the machine, enrolled the encrypted KVM credential, and configured operator-verified certificate pinning. Follow [worker setup](../../docs/setup/worker.md) and [Windows setup](../../docs/setup/windows.md) to complete worker activation; KVM authentication alone does not enable worker assignment.
+Registered the machine, enrolled the encrypted KVM credential, configured operator-verified certificate pinning, installed Dependabot globally, and bootstrapped verified SSH access. Prior SSH service/firewall/key-file settings were backed up locally at `C:\ProgramData\ssh\nebula-backup-20261027-223257`. Follow [worker setup](../../docs/setup/worker.md) and [Windows setup](../../docs/setup/windows.md) to complete worker activation; SSH access alone does not enable worker assignment.

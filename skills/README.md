@@ -13,6 +13,8 @@ This directory is the canonical source for repository-owned skills. `catalog.jso
 
 The Dependabot skill is the operator-provided file, preserved unchanged. Its three referenced guides were included from the matching locally installed skill (the entrypoint hashes match). Optional plugin/tool instructions inside it do not mean those integrations are installed on fleet machines.
 
+Dependabot is intended to be available across all projects on both commanders and workers. Install its complete folder in the relevant user's global skill directory for each selected harness, rather than in individual project directories. For the current Codex user on Trigbotic, this is `C:\Users\Charl\.agents\skills\dependabot`; the entrypoint and all three references match this repository. Other machines and harnesses still need their own deployment verification. Global availability does not authorize dependency changes without an assignment.
+
 ## Deployment procedure
 
 1. Read the machine's OS, role, selected harnesses, and existing skill destinations. Confirm the current discovery/install method for that harness; paths vary. These folders are portable source assets, not automatically installed global skills.

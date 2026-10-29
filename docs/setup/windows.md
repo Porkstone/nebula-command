@@ -23,4 +23,4 @@ This reads local hardware/OS facts and returns JSON. Curate the relevant facts i
 - Record an absolute Windows workspace path, such as `C:\work\nebula`. Install Git, Python, and project-specific tools for the execution account. Install the chosen harness only if it supports this execution environment.
 - Choose a supported harness service or documented Windows session mechanism. A remote process started in a transient SSH shell is not automatically durable. Record its behavior across logout, sleep, and restart.
 
-Verify all items in [the target state](target-state.md). This scaffold does not change Windows services, firewall, execution policy, or power settings.
+Verify all items in [the target state](target-state.md). For an operator-requested bootstrap on win-srv-01, the fixed [SSH setup tool](../../tools/README.md) can configure the OpenSSH service, a commander-scoped Windows firewall rule, and public-key authentication through the verified KVM. It preserves recovery access and does not enable fleet assignment. Other setup remains manual; execution policy and power settings are not changed.

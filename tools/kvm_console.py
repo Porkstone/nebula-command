@@ -13,6 +13,8 @@ from urllib.parse import urlencode
 import uuid
 
 from fleet_secrets import ROOT, ERROR_CODES, KvmClient, SecretError, Store, consume_input
+from dependabot_deploy import windows_command
+from windows_ssh_setup import windows_command as ssh_setup_command
 
 
 def jpeg_size(data):
@@ -46,7 +48,7 @@ def jpeg_size(data):
 
 
 class ConsoleSession:
-    def __init__(self, kvm, windows, pin, output_directory, client_factory=KvmClient, clock=time.monotonic, pause=time.sleep):
+    def __init__(self, kvm, windows, pin, output_directory, client_factory=KvmClient, clock=time.monotonic, pause=time.sleep, allow_dependabot_install=False, allow_ssh_setup=False):
         if (kvm.get("kind", "kvm") != "kvm" or windows.get("kind") != "windows-console"
                 or kvm["machine_id"] != windows["machine_id"]
                 or windows["origin"] != f"console://{kvm['machine_id']}" or not pin):
@@ -62,6 +64,11 @@ class ConsoleSession:
         self.frame = None
         self.frame_number = 0
         self.password_attempted = False
+        self.allow_dependabot_install = allow_dependabot_install
+        self.allow_ssh_setup = allow_ssh_setup
+        self.installer_kind = None
+        self.installer_opened = False
+        self.install_attempted = False
 
     def login(self):
         result = self.client.request("POST", "/api/auth/login", urlencode({
@@ -139,6 +146,36 @@ class ConsoleSession:
         operation = command.get("operation")
         if operation == "snapshot":
             return self.snapshot()
+        if operation in ("open-dependabot-installer", "install-dependabot", "open-ssh-setup", "setup-ssh"):
+            ssh_mode = operation in ("open-ssh-setup", "setup-ssh")
+            allowed = self.allow_ssh_setup if ssh_mode else self.allow_dependabot_install
+            kind = 'ssh' if ssh_mode else 'dependabot'
+            if not allowed or self.install_attempted:
+                raise SecretError("console_command_rejected")
+            self.check_frame(command)
+            if operation in ("open-dependabot-installer", "open-ssh-setup"):
+                if self.installer_opened or command.get("desktop_confirmed") is not True:
+                    raise SecretError("console_command_rejected")
+                self.installer_opened = True
+                self.installer_kind = kind
+                self.chord(["MetaLeft", "KeyR"])
+                self.pause(1)
+                text = "powershell -NoProfile -NoExit"
+            else:
+                if not self.installer_opened or self.installer_kind != kind or command.get("shell_confirmed") is not True:
+                    raise SecretError("console_command_rejected")
+                text = ssh_setup_command() if ssh_mode else windows_command()
+                self.install_attempted = True
+                # Clear any unsubmitted input in the visually confirmed shell.
+                self.chord(["ControlLeft", "KeyC"])
+            # Slow HID entry of a whole script can exceed the HTTPS timeout.
+            # Never retry an ambiguous chunk or press Enter after a failed one.
+            for offset in range(0, len(text), 96):
+                self.request("POST", "/api/hid/print?limit=128&slow=true", body=text[offset:offset + 96].encode("utf-8"),
+                             content_type="text/plain; charset=utf-8")
+            self.key("Enter")
+            self.pause(3)
+            return self.snapshot()
         if self.password_attempted:
             raise SecretError("console_attempt_already_used")
         if operation == "unlock":
@@ -185,6 +222,8 @@ def emit(value):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-file", required=True, type=Path, help="Disposable T3 private key input; consumed")
+    parser.add_argument("--allow-dependabot-install", action="store_true", help="Enable fixed, visually gated Dependabot installation on win-srv-01")
+    parser.add_argument("--allow-ssh-setup", action="store_true", help="Enable fixed, visually gated OpenSSH bootstrap on win-srv-01")
     args = parser.parse_args(argv)
     session = None
     try:
@@ -195,7 +234,9 @@ def main(argv=None):
         windows = store.decrypt("win-srv-01-console", private)
         del private
         session = ConsoleSession(kvm, windows, target.get("tls_pin_sha256"),
-                                 ROOT / ".local/kvm-console" / uuid.uuid4().hex)
+                                 ROOT / ".local/kvm-console" / uuid.uuid4().hex,
+                                 allow_dependabot_install=args.allow_dependabot_install,
+                                 allow_ssh_setup=args.allow_ssh_setup)
         session.login()
         emit(session.snapshot())
         commands = queue.Queue()

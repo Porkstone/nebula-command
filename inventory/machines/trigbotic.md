@@ -22,7 +22,10 @@ CPU, RAM, GPU, storage headroom, and power/sleep behavior have not been inventor
 
 ## Deployed skills and instructions
 
-No deployments have been verified or recorded. Use [the skill deployment guide](../../skills/README.md).
+- Dependabot: verified on 2026-10-27 at `C:\Users\Charl\.agents\skills\dependabot`, available across projects to the current Codex user. SHA-256 comparisons confirm that `SKILL.md` and all three reference files match the repository sources. This session discovers the installed skill. Other users and harnesses remain unverified.
+- Other skill deployments remain unverified. Use [the skill deployment guide](../../skills/README.md).
+
+Commander SSH client configuration: `ssh nebula-win-srv-01` is installed for the current user from [trigbotic.config](../../config/ssh/trigbotic.config). It uses the dedicated local identity `C:\Users\Charl\.ssh\nebula_win_srv_01`; only [its public key](../../config/ssh/trigbotic-win-srv-01.pub) is in the repository. The server's ED25519 host key was compared with the fingerprint displayed through the pinned KVM and enrolled in local known hosts. Strict host checking and batch key authentication succeeded as `win-srv-01\Administrator`. Other users' SSH setup remains unverified.
 
 ## Verification history
 
