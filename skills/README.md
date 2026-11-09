@@ -21,7 +21,7 @@ The worker skill `baby-sit-pr` runs only when a prompt or authorized handoff exp
 
 The worker skill `/fix-dbot-issues` (also `$fix-dbot-issues` in Codex) checks all repositories in the assigned organization unless the user supplies a repository list. It checks open security alerts and Dependabot update PRs, attempts fixes, and creates one consolidated PR per repository. Its report lists PRs with unresolved counts and repositories verified to have no issues, with blocked or inaccessible repositories reported separately. Deploy the complete folder, including `agents/openai.yaml`; normal automatic discovery is enabled. Installation does not run a scan or authorize merging.
 
-Installed for the registered worker accounts on 2026-11-09: `Administrator` on [win-srv-01](../inventory/machines/win-srv-01.md) and `charlie` on [ubuntu-srv1](../inventory/machines/ubuntu-srv1.md). Both complete folders match the source hashes recorded in the machine records, and both Codex app-server discovery checks returned the enabled global skill. Other users and harnesses are not covered by those checks.
+Installed for all three registered worker accounts on 2026-11-09: `Charl` on [Trigbotic](../inventory/machines/trigbotic.md), `Administrator` on [win-srv-01](../inventory/machines/win-srv-01.md), and `charlie` on [ubuntu-srv1](../inventory/machines/ubuntu-srv1.md). All complete folders match the source hashes recorded in the machine records, and all three Codex app-server discovery checks returned the enabled global skill. Other users and harnesses are not covered by those checks.
 
 ## Deployment procedure
 

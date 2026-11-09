@@ -2,7 +2,7 @@
 
 The shared operating repository for agentic engineering across PCs connected by Tailscale. One **commander** coordinates work across **workers**. The commander is usually the PC the human operator is using directly and can also execute local tasks within its recorded capacity.
 
-This scaffold provides inventory conventions, configuration examples, operating guides, reusable skills, and local inspection tools. Remote dispatch, scheduling, credential distribution, and service installation are not implemented yet. The live inventory contains Trigbotic (commander), win-srv-01 (Windows Server worker), and ubuntu-srv1 (Ubuntu worker), staged pending setup verification. Example machines are fictional.
+This scaffold provides inventory conventions, configuration examples, operating guides, reusable skills, and local inspection tools. Remote dispatch, scheduling, credential distribution, and service installation are not implemented yet. The live inventory designates Macbotic as commander, with three workers: Trigbotic (Windows 11), win-srv-01 (Windows Server), and ubuntu-srv1 (Ubuntu). All four machines are staged pending setup verification. Example machines are fictional.
 
 ## Repository map
 
