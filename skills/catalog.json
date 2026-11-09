@@ -4,6 +4,8 @@
     {"name": "fleet-onboard", "roles": ["commander"], "harnesses": ["any"]},
     {"name": "fleet-orchestrate", "roles": ["commander"], "harnesses": ["any"]},
     {"name": "fleet-work", "roles": ["commander", "worker"], "harnesses": ["any"]},
+    {"name": "baby-sit-pr", "roles": ["worker"], "harnesses": ["any"]},
+    {"name": "fix-dbot-issues", "roles": ["worker"], "harnesses": ["any"]},
     {"name": "fleet-recover", "roles": ["commander"], "harnesses": ["any"]},
     {"name": "dependabot", "roles": ["commander", "worker"], "harnesses": ["any"]},
     {"name": "fleet-secrets", "roles": ["commander"], "harnesses": ["t3-code"]}

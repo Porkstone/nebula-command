@@ -1,0 +1,3 @@
+interface:
+  display_name: "Fix Dependabot issues"
+  short_description: "Fix Dependabot issues across assigned repositories"

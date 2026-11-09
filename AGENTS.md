@@ -7,8 +7,10 @@ This repo manages a Tailscale-connected fleet. Read `docs/architecture.md` and `
 - Machine setup: use `skills/fleet-onboard/SKILL.md`.
 - Work assignment: use `skills/fleet-orchestrate/SKILL.md`.
 - Worker execution: use `skills/fleet-work/SKILL.md`.
+- PR review monitoring and fixes: use `skills/baby-sit-pr/SKILL.md` only when the prompt or authorized worker handoff explicitly invokes `$baby-sit-pr` or the baby-sit PR skill.
 - Interrupted work or commander changes: use `skills/fleet-recover/SKILL.md`.
 - Dependabot configuration and dependency update workflows: use `skills/dependabot/SKILL.md`.
+- Organization or repository Dependabot remediation, including `/fix-dbot-issues`: use the worker skill `skills/fix-dbot-issues/SKILL.md`.
 - Encrypted credentials and private key submission: use `skills/fleet-secrets/SKILL.md`.
 
 The scaffold has no remote dispatcher. Do not describe task records as an executable queue or claim an SSH command started a durable managed agent session. Respect authorization already given in the current session; network reachability alone grants no permission to run work. Do not copy credentials between PCs.

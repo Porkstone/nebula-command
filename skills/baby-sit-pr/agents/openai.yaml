@@ -1,0 +1,6 @@
+interface:
+  display_name: "baby-sit PR"
+  short_description: "Monitor PR reviews and fix valid findings"
+
+policy:
+  allow_implicit_invocation: false

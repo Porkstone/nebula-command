@@ -22,6 +22,8 @@ nebula-command/
 │   ├── fleet-onboard/         Register and configure a machine
 │   ├── fleet-orchestrate/     Assign, track, and integrate work
 │   ├── fleet-work/            Execute a bounded assignment and return evidence
+│   ├── baby-sit-pr/           Explicit-only worker PR review monitoring and fixes
+│   ├── fix-dbot-issues/       Worker Dependabot fixes with one PR per repository
 │   ├── fleet-recover/         Reconcile interrupted work and commander changes
 │   ├── dependabot/            Shared dependency update and security guidance
 │   └── fleet-secrets/         Private operator key submission and credential use
@@ -60,6 +62,6 @@ The first validation accepts an empty scaffold. `--ready` requires an enabled co
 
 ## Repository-owned skills
 
-The six skill folders under `skills/` are the canonical sources. [The catalog and deployment guide](skills/README.md) describe role selection and deployment records. Point a compatible harness at them or install reviewed copies into its skill directory; cloning the repo alone does not install them. Load only the skill relevant to the task. The repo’s `AGENTS.md` provides routing for agents reading this checkout.
+The eight skill folders under `skills/` are the canonical sources. [The catalog and deployment guide](skills/README.md) describe role selection and deployment records. Point a compatible harness at them or install reviewed copies into its skill directory; cloning the repo alone does not install them. Load only the skill relevant to the task. The repo’s `AGENTS.md` provides routing for agents reading this checkout.
 
 Keep this repo private if it contains internal machine names or project information. Commit curated configuration and results; keep plaintext credentials, private keys, raw logs, and sessions outside Git. [Encrypted credentials](secrets/README.md) may be committed under `secrets/`; each use requires an operator-supplied key through T3 Code. See [the operator workflow](docs/runbooks/operator-secrets.md), [configuration conventions](config/README.md), and [operations conventions](operations/README.md).

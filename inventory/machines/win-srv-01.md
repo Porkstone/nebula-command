@@ -49,6 +49,8 @@ CPU, RAM, GPU, storage headroom, and power/sleep behavior have not been inventor
 
 ## Deployed skills and instructions
 
+- `fix-dbot-issues` installed globally for `Administrator` at `C:\Users\Administrator\.agents\skills\fix-dbot-issues` on 2026-11-09 through SSH pinned to the recorded ED25519 host identity, using the existing local commander key. Both files match the repository source: `SKILL.md` SHA-256 `62fab0b80ac5e0391f2228235daf3f1a06a1cd5bd8c94b274ced5a7e8a055d75`; `agents/openai.yaml` SHA-256 `c794e62c659478fefde5c686fda7eb80dd4b10d53b77e60e17ca45ffb3259896`. Codex app-server `skills/list` with a forced reload returned the exact global path, `enabled: true`, and display name `Fix Dependabot issues`. The discovery process tree was stopped and the SSH connection closed. Other OS users and harnesses remain unverified.
+- `baby-sit-pr` installed globally for `Administrator` at `C:\Users\Administrator\.agents\skills\baby-sit-pr` on 2026-11-05 through strict-host-checking, key-authenticated SSH. Both files match the current repository source: `SKILL.md` SHA-256 `27059a43211bc53c1e95effd0cbcde973a7e50abb3d6d7b6d8ce3c46d40dc671`; `agents/openai.yaml` SHA-256 `9d889bdb50d1d17630e067a62d82159891539c81a7b592c36da6f39989d5defc`. Codex CLI `0.166.0` app-server `skills/list` returned this exact skill path with `enabled: true` and display name `baby-sit PR`. Metadata disables implicit invocation and the skill body requires explicit invocation. The temporary discovery process was stopped; no PR monitor or worker assignment was started.
 - Dependabot installed globally for `Administrator` at `C:\Users\Administrator\.agents\skills\dependabot` on 2026-10-27. The fixed installer checked the machine/account, verified all four SHA-256 hashes, and displayed `DEPENDABOT VERIFIED` with the entrypoint hash `85179928b0838c542078747ed9f749209fa656590df593abeb9853ee43426edf`. Files match the pinned source manifest in `tools/dependabot_deploy.py`. Available across projects for harnesses using this global directory; actual harness discovery and other OS users remain unverified.
 - Other deployments remain unverified. Use [the skill deployment guide](../../skills/README.md).
 
@@ -56,6 +58,8 @@ CPU, RAM, GPU, storage headroom, and power/sleep behavior have not been inventor
 
 | Date | Source / verifier | Evidence | Limitations |
 | --- | --- | --- | --- |
+| 2026-11-09 | Operator-authorized worker skill installation over pinned, key-authenticated SSH | Verified machine/account, staged and installed both `fix-dbot-issues` files, compared source SHA-256 hashes, and confirmed enabled Codex discovery at the global path | Other OS users and harnesses unverified; no repository scans, PRs, or fleet activation |
+| 2026-11-05 | Operator-authorized skill deployment over verified SSH | Installed both `baby-sit-pr` files with source-matching SHA-256 hashes; Codex CLI app-server discovery returned the enabled skill at the global path | No PR monitoring started; other OS users and harnesses remain unverified; assignment stays disabled |
 | 2026-10-27 | Operator | Machine name, worker role, Windows Server OS family, and Tailscale IP supplied | No connectivity or execution checks performed |
 | 2026-10-27 | Operator | Network KVM URL, hardware/model, and password requirement supplied | No connection or login attempted |
 | 2026-10-27 | Operator | KVM password is stored in LastPass | Vault item name and access have not been verified |
