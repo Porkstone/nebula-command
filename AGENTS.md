@@ -5,6 +5,7 @@
 This repo manages a Tailscale-connected fleet. Read `docs/architecture.md` and `inventory/README.md` before changing fleet behavior. `inventory/fleet.json` is authoritative; examples are not real targets. Do not infer that the machine running this session is the commander.
 
 - Machine setup: use `skills/fleet-onboard/SKILL.md`.
+- Commander session initialization, including `/start-commander`: use `skills/start-commander/SKILL.md` to load verified machine and fleet context.
 - Work assignment: use `skills/fleet-orchestrate/SKILL.md`.
 - Worker execution: use `skills/fleet-work/SKILL.md`.
 - PR review monitoring and fixes: use `skills/baby-sit-pr/SKILL.md` only when the prompt or authorized worker handoff explicitly invokes `$baby-sit-pr` or the baby-sit PR skill.

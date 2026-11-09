@@ -2,7 +2,7 @@
 
 The shared operating repository for agentic engineering across PCs connected by Tailscale. One **commander** coordinates work across **workers**. The commander is usually the PC the human operator is using directly and can also execute local tasks within its recorded capacity.
 
-This scaffold provides inventory conventions, configuration examples, operating guides, reusable skills, and local inspection tools. Remote dispatch, scheduling, credential distribution, and service installation are not implemented yet. The live inventory designates Macbotic as commander, with three workers: Trigbotic (Windows 11), win-srv-01 (Windows Server), and ubuntu-srv1 (Ubuntu). All four machines are staged pending setup verification. Example machines are fictional.
+This scaffold provides inventory conventions, configuration examples, operating guides, reusable skills, and local inspection tools. Remote dispatch, scheduling, credential distribution, and service installation are not implemented yet. The live inventory designates Macbotic as commander, configured and verified for local Codex work with one task slot. Its three workers—Trigbotic (Windows 11), win-srv-01 (Windows Server), and ubuntu-srv1 (Ubuntu)—remain staged pending execution verification. GitHub CLI authentication and some commander-to-worker access remain follow-up items. Example machines are fictional.
 
 ## Repository map
 
@@ -19,6 +19,7 @@ nebula-command/
 │   └── tailscale/             Tailnet policy examples
 ├── secrets/                   Encrypted credentials and nonsecret target catalog
 ├── skills/
+│   ├── start-commander/       Load commander identity and machine context
 │   ├── fleet-onboard/         Register and configure a machine
 │   ├── fleet-orchestrate/     Assign, track, and integrate work
 │   ├── fleet-work/            Execute a bounded assignment and return evidence
@@ -62,6 +63,6 @@ The first validation accepts an empty scaffold. `--ready` requires an enabled co
 
 ## Repository-owned skills
 
-The eight skill folders under `skills/` are the canonical sources. [The catalog and deployment guide](skills/README.md) describe role selection and deployment records. Point a compatible harness at them or install reviewed copies into its skill directory; cloning the repo alone does not install them. Load only the skill relevant to the task. The repo’s `AGENTS.md` provides routing for agents reading this checkout.
+The nine skill folders under `skills/` are the canonical sources. [The catalog and deployment guide](skills/README.md) describe role selection and deployment records. Point a compatible harness at them or install reviewed copies into its skill directory; cloning the repo alone does not install them. Load only the skill relevant to the task. The repo’s `AGENTS.md` provides routing for agents reading this checkout.
 
 Keep this repo private if it contains internal machine names or project information. Commit curated configuration and results; keep plaintext credentials, private keys, raw logs, and sessions outside Git. [Encrypted credentials](secrets/README.md) may be committed under `secrets/`; each use requires an operator-supplied key through T3 Code. See [the operator workflow](docs/runbooks/operator-secrets.md), [configuration conventions](config/README.md), and [operations conventions](operations/README.md).

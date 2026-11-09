@@ -7,18 +7,33 @@ Inventory ID: `trigbotic`. Current role and Tailscale endpoint are authoritative
 - Local hostname observed: `TrigBotic` (case-insensitive match to the supplied name).
 - Execution environment: native Windows 11 Pro, confirmed by local OS inspection.
 - Purpose: human-operated engineering worker.
-- Owner, location, account, shell, and availability: pending confirmation.
+- Execution account: `trigbotic\charl`, profile `C:\Users\Charl`; PowerShell. Owner and physical location remain unconfirmed.
 
 ## Hardware
 
-CPU, RAM, GPU, storage headroom, and power/sleep behavior have not been inventoried.
+Verified on 2026-11-09: AMD Ryzen 5 5560U with Radeon Graphics, 31,057,645,568 bytes RAM (approximately 28.9 GiB), approximately 45 GiB free on C:. Windows 11 Pro 10.0.26300, 64-bit. Current power plan is AMD Ryzen Balanced; idle sleep is disabled on AC and configured for 10 minutes on battery. No power configuration was changed; reboot, lid closure and network continuity are not guaranteed.
 
 ## Configuration
 
-- The operator supplied the Tailscale IP; enrollment, tags, and network reachability have not been verified.
+- Local `tailscale ip -4` confirmed `100.123.213.15` on 2026-11-09. Enrollment identity/tags remain unreviewed.
 - OpenSSH on port 22 is the scaffold's proposed default, not a verified service configuration.
-- SSH account, host identity, workspace root, harnesses, authentication, session lifecycle, and recovery access remain unverified.
-- Assignment is disabled and capacity is 0 pending worker setup verification. Macbotic is now the selected commander; its setup remains staged.
+- SSH service and server host identity remain unverified. The verified local account is recorded in inventory for identity; that does not establish SSH access.
+- Selected assignment interface: existing T3 Code service, environment `092fc721-316b-4b85-a39d-c99f1b65073f`, server `0.1.8-nightly.20261109.4399`, Codex harness. The Macbotic operator's current T3 session uses this host. Incoming SSH from Macbotic is not required by this interface and remains unverified.
+- Enabled with capacity 1 for bounded T3/Codex work after the disposable task/result verification below. Default workspace root is `C:\files\development`; actual per-task checkouts are created and bound by T3 under `C:\Users\Charl\.t3\worktrees` and recorded in the task ledger. No live checkout or provider login state was copied.
+- Recovery: retain the exact T3 thread and run receipt; read its state/results through the T3 service after reconnecting. Interrupt only the identified top-level thread when authorized. A lost connection is unknown until reconciled; do not launch a duplicate. Automatic resumption after host reboot/service loss has not been verified. Local operator recovery is available.
+
+## T3 worker verification and current reservation
+
+On 2026-11-09 the operator requested a new worker thread for `nestra-config-manager`. This authorized the bounded readiness checks and conservative activation needed for that assignment. The new isolated thread completed a disposable write/read round trip and stopped before feature execution. A separate T3 read retrieved its final result after completion, verifying the service's session/result-return path independently of an SSH shell.
+
+- Thread: <t3-thread://v2/092fc721-316b-4b85-a39d-c99f1b65073f/mcp:launch:51fe4c523f19f11f92249806593fe14d84f6dfe150a7ed61430e1e48255794a1>
+- Verification run: `run:thread:mcp%3Alaunch%3A51fe4c523f19f11f92249806593fe14d84f6dfe150a7ed61430e1e48255794a1:ordinal:1`, completed `2026-11-09T19:34:45.260Z`.
+- Verified identity `TrigBotic`, `trigbotic\charl`; isolated branch `feat/proposal-document-pack` at `c9c00fd38c62aba5462617e0da5424540925bc32`, matching live `origin/master`.
+- Ignored disposable `.local/nebula-preflight/result.json` exactly matched the task/attempt/machine and `result: passed`; tracked checkout remained clean.
+- Task tools: Node 26.13.0, project-selected pnpm 10.34.7, .NET SDK 9.0.308, Git 2.56.0.windows.4, gh 2.103.3. Interactive global pnpm reports 12.15.0; use the project's selected version. Local Python and rg are present. Global Codex CLI reports 0.162.1; T3's own provider runtime is separate and successfully ran `gpt-6.1-sol`.
+- GitHub API access for `Market-Harborough-Building-Society/nestra-config-manager` verified pull/push and maintainer/admin permissions for the existing machine-local account. This does not establish permissions for other repos or machines.
+- The worker successfully read the minimal handoff skill at `C:\files\development\Nebula\nebula-command\skills\fleet-work\SKILL.md` and the explicitly invoked `C:\Users\Charl\.codex\skills\babysit\SKILL.md`. These paths are supplied in the task; this is not a claim of additional global skill installation/discovery.
+- Current reservation: one slot for [nestra-proposal-document-pack-20261109](../../operations/tasks/nestra-proposal-document-pack-20261109.md), attempt 1. Commander retains integration and capacity-release decisions.
 
 ## Deployed skills and instructions
 
@@ -39,4 +54,4 @@ SSH client configuration retained from the former commander role: `ssh nebula-wi
 
 ## Configuration changes
 
-Reclassified from commander to worker at the operator's request on 2026-11-09. Macbotic was subsequently selected as commander. Follow [worker setup](../../docs/setup/worker.md) to complete activation.
+Reclassified from commander to worker at the operator's request on 2026-11-09. Macbotic was subsequently selected as commander. T3/Codex execution is now enabled with capacity 1 following the evidence above. SSH setup and other harnesses remain outside the verified assignment path.

@@ -4,6 +4,7 @@ This directory is the canonical source for repository-owned skills. `catalog.jso
 
 | Skill | Intended use |
 | --- | --- |
+| `start-commander` | Load verified commander identity, responsibilities, machine details, and operating context |
 | `fleet-onboard` | Inspect, configure, verify, and register a machine |
 | `fleet-orchestrate` | Commander assignment, tracking, and integration |
 | `fleet-work` | Execute one bounded assignment and return evidence |
@@ -24,6 +25,12 @@ The worker skill `/fix-dbot-issues` (also `$fix-dbot-issues` in Codex) checks al
 Installed for all three registered worker accounts on 2026-11-09: `Charl` on [Trigbotic](../inventory/machines/trigbotic.md), `Administrator` on [win-srv-01](../inventory/machines/win-srv-01.md), and `charlie` on [ubuntu-srv1](../inventory/machines/ubuntu-srv1.md). All complete folders match the source hashes recorded in the machine records, and all three Codex app-server discovery checks returned the enabled global skill. Other users and harnesses are not covered by those checks.
 
 ## Deployment procedure
+
+`/start-commander` (also `$start-commander` in Codex) loads a commander briefing into the current conversation. Each installed copy may include a non-secret `references/machine.json` with `machine_id` and `operating_checkout` to resolve its target from any project directory. Generate that binding per machine; do not bake one commander's identity into the portable source. The live inventory remains authoritative. The skill distinguishes the operator's intended machine from the tool host and reports stale, staged, or mismatched context. Install it on every inventory machine with role `commander`, including staged commanders; it does not itself activate or dispatch anything.
+
+Deployed `/start-commander` on 2026-11-09 to every currently designated commander: Macbotic (`charlesbarker`). Both canonical source files and the Mac-specific binding were hash-verified; Codex discovery and context-source resolution passed. See [Macbotic's record](../inventory/machines/macbotic.md) for the exact destination and digests. Worker machines were not installation targets for this skill.
+
+Macbotic's `charlesbarker` account received all six commander skills on 2026-11-09 under `/Users/charlesbarker/.agents/skills`. All nine files were hash-verified, and Codex discovery returned the six enabled global skills. See [Macbotic's record](../inventory/machines/macbotic.md) for the source revision, manifest digest, and execution/authentication limitations. T3 private-secret integration remains unverified.
 
 1. Read the machine's OS, role, selected harnesses, and existing skill destinations. Confirm the current discovery/install method for that harness; paths vary. These folders are portable source assets, not automatically installed global skills.
 2. Select applicable catalog entries. `harnesses: ["any"]` means no harness-specific dependency, not proof that every harness supports this file format. Read the `SKILL.md` before deployment.

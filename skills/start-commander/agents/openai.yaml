@@ -1,0 +1,3 @@
+interface:
+  display_name: "Start commander"
+  short_description: "Load commander identity and machine operating context"

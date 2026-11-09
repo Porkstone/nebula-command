@@ -5,30 +5,30 @@
     {
       "id": "macbotic",
       "role": "commander",
-      "enabled": false,
+      "enabled": true,
       "os": "macos",
       "host": "100.90.74.12",
-      "ssh_user": null,
+      "ssh_user": "charlesbarker",
       "ssh_port": 22,
       "transport": "openssh",
-      "workspace_root": null,
-      "max_parallel_tasks": 0,
-      "capabilities": [],
-      "harnesses": []
+      "workspace_root": "/Users/charlesbarker/development/Nebula",
+      "max_parallel_tasks": 1,
+      "capabilities": ["git", "python", "node", "pnpm", "tmux", "codex"],
+      "harnesses": ["codex"]
     },
     {
       "id": "trigbotic",
       "role": "worker",
-      "enabled": false,
+      "enabled": true,
       "os": "windows",
       "host": "100.123.213.15",
-      "ssh_user": null,
+      "ssh_user": "Charl",
       "ssh_port": 22,
       "transport": "openssh",
-      "workspace_root": null,
-      "max_parallel_tasks": 0,
-      "capabilities": [],
-      "harnesses": []
+      "workspace_root": "C:\\files\\development",
+      "max_parallel_tasks": 1,
+      "capabilities": ["git", "python", "node", "pnpm", "dotnet"],
+      "harnesses": ["codex", "t3-code"]
     },
     {
       "id": "win-srv-01",

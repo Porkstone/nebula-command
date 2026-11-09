@@ -1,6 +1,7 @@
 {
   "version": 1,
   "skills": [
+    {"name": "start-commander", "roles": ["commander"], "harnesses": ["any"]},
     {"name": "fleet-onboard", "roles": ["commander"], "harnesses": ["any"]},
     {"name": "fleet-orchestrate", "roles": ["commander"], "harnesses": ["any"]},
     {"name": "fleet-work", "roles": ["commander", "worker"], "harnesses": ["any"]},

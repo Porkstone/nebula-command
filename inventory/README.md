@@ -4,12 +4,12 @@
 
 ## Registered machines
 
-- [Macbotic](machines/macbotic.md): selected commander; macOS confirmed by the operator and Tailscale peer data; Tailscale endpoint recorded; execution setup verification pending.
+- [Macbotic](machines/macbotic.md): selected commander; macOS, SSH, workspace, commander skills, and local Codex execution verified; enabled with one local task slot.
 - [Trigbotic](machines/trigbotic.md): worker; Windows 11 Pro confirmed locally.
 - [win-srv-01](machines/win-srv-01.md): worker; Windows Server 2025 Standard Evaluation observed through the KVM; Windows console sign-in verified.
 - [ubuntu-srv1](machines/ubuntu-srv1.md): worker; Ubuntu reported by the operator.
 
-Macbotic is the selected commander. Tailscale endpoints for all four machines are stored in `fleet.json`. All four machines are staged with assignment disabled and capacity 0 until connection accounts, workspaces, harnesses, and execution checks are verified. OpenSSH/port 22 are proposed defaults, not observed remote service settings.
+Macbotic is the selected commander, enabled for local work with capacity 1. Tailscale endpoints for all four machines are stored in `fleet.json`. Trigbotic is enabled with capacity 1 after an isolated T3/Codex task/result round trip on 2026-11-09; its proposal-document-pack task reserves that slot. Assign Trigbotic through its verified T3 service, not SSH: incoming SSH from Macbotic remains unverified. The two server workers remain staged with assignment disabled and capacity 0. Macbotic's GitHub CLI authentication and remaining worker access still need configuration; see its machine record. OpenSSH/port 22 are inventory defaults; service verification and any selected harness interface are recorded per machine.
 
 Create a detail record at `machines/<id>.md` from [the machine template](../templates/machine.md). Keep routing values in `fleet.json` and detailed hardware/configuration evidence in the record. Review the diff before enabling a machine.
 
