@@ -4,12 +4,12 @@
 
 ## Registered machines
 
-- [Macbotic](machines/macbotic.md): selected commander; macOS confirmed by the operator; setup verification pending.
+- [Macbotic](machines/macbotic.md): selected commander; macOS confirmed by the operator and Tailscale peer data; Tailscale endpoint recorded; execution setup verification pending.
 - [Trigbotic](machines/trigbotic.md): worker; Windows 11 Pro confirmed locally.
 - [win-srv-01](machines/win-srv-01.md): worker; Windows Server 2025 Standard Evaluation observed through the KVM; Windows console sign-in verified.
 - [ubuntu-srv1](machines/ubuntu-srv1.md): worker; Ubuntu reported by the operator.
 
-Macbotic is the selected commander. Known Tailscale endpoints are stored in `fleet.json`; Macbotic's endpoint remains unknown. All four machines are staged with assignment disabled and capacity 0 until connection accounts, workspaces, harnesses, and execution checks are verified. OpenSSH/port 22 are proposed defaults, not observed remote service settings.
+Macbotic is the selected commander. Tailscale endpoints for all four machines are stored in `fleet.json`. All four machines are staged with assignment disabled and capacity 0 until connection accounts, workspaces, harnesses, and execution checks are verified. OpenSSH/port 22 are proposed defaults, not observed remote service settings.
 
 Create a detail record at `machines/<id>.md` from [the machine template](../templates/machine.md). Keep routing values in `fleet.json` and detailed hardware/configuration evidence in the record. Review the diff before enabling a machine.
 

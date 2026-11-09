@@ -4,9 +4,9 @@ Inventory ID: `macbotic`. Current role and routing are authoritative in [fleet.j
 
 ## Identity and ownership
 
-- Machine name: `Macbotic`, supplied by the operator; actual hostname not yet verified.
+- Machine name: `Macbotic`, supplied by the operator and matched to the Tailscale peer's reported hostname on 2026-11-09; authenticated OS-level hostname verification remains pending.
 - Owner/operator and physical location: pending confirmation.
-- Execution environment: macOS, confirmed by the operator on 2026-11-09; version and architecture remain unverified.
+- Execution environment: macOS, confirmed by the operator and Tailscale peer data on 2026-11-09; version and architecture remain unverified.
 - Shell and execution account: pending confirmation.
 - Purpose: human-operated commander coordinating the fleet.
 - Availability: pending confirmation.
@@ -17,7 +17,7 @@ CPU/architecture, RAM, GPU, storage headroom, and power/sleep/reboot behavior ha
 
 ## Configuration
 
-- No exact `Macbotic` hostname or DNS-name match was found in the current Tailscale peer list on 2026-11-09. Enrollment identity, endpoint, tags, and reachability remain unverified; this does not establish that the machine is unenrolled.
+- A refreshed Tailscale peer lookup on 2026-11-09 matched hostname `Macbotic`, reported macOS, and showed the peer online. Its IPv4 endpoint is recorded in `fleet.json`. Enrollment identity/tags, direct connectivity, SSH access, and commander-to-worker access remain unverified; Tailscale online status alone does not establish execution readiness.
 - SSH account, host identity, workspace ownership, installed tools, harnesses, local authentication, session lifecycle, and recovery access remain unverified.
 - OpenSSH and port 22 are proposed defaults, not verified service settings.
 - Commander designation is staged: assignment remains disabled with capacity 0 pending setup verification. No worker dispatch was started.
@@ -34,8 +34,9 @@ No skill installations or harness discovery have been verified on Macbotic. Sele
 | --- | --- | --- | --- |
 | 2026-11-09 | Operator | Supplied machine name `Macbotic` and requested commander designation | No endpoint, account, workspace, hardware, or runtime verification supplied |
 | 2026-11-09 | Operator | Confirmed macOS; registered `macbotic` with role `commander` and selected it as the inventory commander | macOS version, architecture, connectivity, and execution readiness remain unverified; assignment stays disabled |
-| 2026-11-09 | Read-only Tailscale peer lookup | No exact hostname or DNS-name match for `Macbotic` in the current peer list | No authentication or remote execution attempted; endpoint remains unknown |
+| 2026-11-09 | Initial read-only Tailscale peer lookup | No exact hostname or DNS-name match for `Macbotic` in that peer list | No authentication or remote execution attempted; endpoint was unknown at this check |
+| 2026-11-09 | Refreshed read-only Tailscale CLI lookup | Matched hostname `Macbotic`, OS `macOS`, IPv4 endpoint, and online status; recorded the observed endpoint in `fleet.json` | No direct connectivity, SSH authentication, or remote execution tested; assignment remains disabled |
 
 ## Configuration changes
 
-Added a staged commander record at the operator's request. Follow [commander setup](../../docs/setup/commander.md) to configure access, deploy skills, and verify execution before activation.
+Added a staged commander record and recorded the Tailscale-observed endpoint at the operator's request. Follow [commander setup](../../docs/setup/commander.md) to configure access, deploy skills, and verify execution before activation.

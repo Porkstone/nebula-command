@@ -7,7 +7,7 @@
       "role": "commander",
       "enabled": false,
       "os": "macos",
-      "host": null,
+      "host": "100.90.74.12",
       "ssh_user": null,
       "ssh_port": 22,
       "transport": "openssh",
