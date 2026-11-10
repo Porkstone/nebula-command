@@ -16,6 +16,8 @@ This repo manages a Tailscale-connected fleet. Read `docs/architecture.md` and `
 
 The scaffold has no remote dispatcher. Do not describe task records as an executable queue or claim an SSH command started a durable managed agent session. Respect authorization already given in the current session; network reachability alone grants no permission to run work. Do not copy credentials between PCs.
 
+For each new worker task, create a new, clearly named top-level T3 Code thread in the target project so the operator can follow it in the T3 Code editor. The operator has requested this as the default for future assignments. Link the thread in the commander conversation and record it in the task ledger. Continue progress, fixes, and results for that task in its own thread; do not reuse an unrelated completed thread. Reconcile interrupted attempts before creating a replacement. Use a T3-managed isolated worktree for repository work, following the harness's thread/workspace lifecycle rules.
+
 ## Planning
 
 When creating a plan, store it in a standalone HTML file in `docs/plans`. Take care with layout and styling to make review easy. Put any clarification questions at the end of the plan.
